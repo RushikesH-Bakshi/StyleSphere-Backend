@@ -5,11 +5,34 @@ from .models import db_user_collection,db_sessions_colletion
 import json
 from django.views.decorators.csrf import csrf_exempt 
 from django.utils.decorators import method_decorator
+from django.contrib.auth.hashers import check_password
 
 def index(request):
     return JsonResponse({"message": "App is running"})  
 
+####################################################################################################
+@method_decorator(csrf_exempt, name='dispatch')
+class login(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            emailid = data.get('emailid')
+            password = data.get('password')
+            
+            userdata = db_user_collection.find_one({"emailid": emailid})
 
+            if userdata:
+                stored_password = userdata.get('password')
+                if password==stored_password:
+                    return JsonResponse({"message": "success"})
+                else:
+                    return JsonResponse({"message": "Password does not match"}, status=400)
+            
+        except Exception as e:
+            return JsonResponse({"error": f"Error occurred: {str(e)}"}, status=500)
+
+
+#########################################################################################
             # _id:65cdfe1c3fa2f1dc1a041ff2
             # firstname:"ram"
             # lastname:"p"
