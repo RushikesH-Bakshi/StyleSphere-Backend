@@ -6,11 +6,13 @@ import json
 from django.views.decorators.csrf import csrf_exempt 
 from django.utils.decorators import method_decorator
 from django.contrib.auth.hashers import check_password
+from datetime import datetime
 
 def index(request):
     return JsonResponse({"message": "App is running"})  
 
-####################################################################################################
+############################################################################################################
+
 @method_decorator(csrf_exempt, name='dispatch')
 class login(View):
     def post(self, request):
@@ -18,21 +20,18 @@ class login(View):
             data = json.loads(request.body)
             emailid = data.get('emailid')
             password = data.get('password')
-            
             userdata = db_user_collection.find_one({"emailid": emailid})
-
             if userdata:
                 stored_password = userdata.get('password')
                 if password==stored_password:
-                    return JsonResponse({"message": "success"})
+                    userdata['_id'] = str(userdata['_id'])
+                    return JsonResponse({"message": "success", "userdata":userdata})
                 else:
                     return JsonResponse({"message": "Password does not match"}, status=400)
-            
         except Exception as e:
             return JsonResponse({"error": f"Error occurred: {str(e)}"}, status=500)
 
-
-#########################################################################################
+############################################################################################################
             # _id:65cdfe1c3fa2f1dc1a041ff2
             # firstname:"ram"
             # lastname:"p"
@@ -42,7 +41,7 @@ class login(View):
             # images:Array (1)
 
 @method_decorator(csrf_exempt, name='dispatch')
-class AddUserView(View):
+class AddUser(View):
     def post(self, request):
         try:
             data = json.loads(request.body)
@@ -51,14 +50,11 @@ class AddUserView(View):
             emailid = data.get('emailid')
             password = data.get('password')
 
-            # Check if emailid already exists in the database
             existing_user = db_user_collection.find_one({"emailid": emailid})
 
             if existing_user is not None:
-                existing_user['_id'] = str(existing_user['_id'])
                 return JsonResponse({"error": "Account already exists with this email id"}, status=400)
 
-            # Insert the new record
             record = {
                 "firstname": firstname,
                 "lastname": lastname,
@@ -83,7 +79,6 @@ def get_data(request):
 
 
 ##########################          convert timestamp to date              ###############################
-# from datetime import datetime
 
 # # Assuming the timestamp value is stored in a variable called 'timestamp_value'
 # timestamp_value = 1708338020
@@ -94,3 +89,54 @@ def get_data(request):
 # # Print the date and time
 # print("Converted Date and Time:", datetime_obj)
 ############################################################################################################
+
+@method_decorator(csrf_exempt, name='dispatch')
+class generateImage(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            userid = data.get('_id')
+            if userid:
+                userdata = CHECKIFUSEREXISTS(userid)
+                if userdata and userdata.get('_id'):
+                    return JsonResponse({"message": "this is test generated image"})
+                else:
+                    return JsonResponse({"message": "user error "})
+            else:
+                return JsonResponse({"message": "error : userid empty !!!"})
+        except Exception as e:
+            return JsonResponse({"error": f"Error occurred: {str(e)}"}, status=500)
+
+############################################################################################################
+
+@method_decorator(csrf_exempt, name='dispatch')
+class getUserProfile(View):
+    def post(self, request):
+        try:
+            print("hi")
+            data = json.loads(request.body)
+            userid = data.get('_id')
+            if userid:
+                userdata = CHECKIFUSEREXISTS(userid)
+                if userdata:
+                    userdata['_id'] = str(userdata['_id'])
+                    print(userdata)
+                    return JsonResponse({"userdata": userdata}, status=200)
+                else:
+                    return JsonResponse({"error": "User not found"}, status=404)
+            else:
+                return JsonResponse({"error": "User ID not provided"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": f"Error occurred: {str(e)}"}, status=500)         
+
+############################################################################################################
+
+def CHECKIFUSEREXISTS(userid):
+    userid = ObjectId(userid)
+    userdata = db_user_collection.find_one({"_id": userid})
+    return userdata
+
+
+###########################################################################################################
+def test_endpoint(request):
+    return JsonResponse({'message': 'Django backend connected successfully!'})    
