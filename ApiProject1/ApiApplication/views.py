@@ -9,7 +9,7 @@ from django.contrib.auth.hashers import check_password
 from datetime import datetime
 
 def index(request):
-    return JsonResponse({"message": "App is running"})  
+    return JsonResponse({"message": "App is running"}, status=200)  
 
 ############################################################################################################
 
@@ -25,7 +25,7 @@ class login(View):
                 stored_password = userdata.get('password')
                 if password==stored_password:
                     userdata['_id'] = str(userdata['_id'])
-                    return JsonResponse({"message": "success", "userdata":userdata})
+                    return JsonResponse({"message": "success", "userdata":userdata}, status=200)
                 else:
                     return JsonResponse({"message": "Password does not match"}, status=400)
         except Exception as e:
@@ -65,7 +65,7 @@ class AddUser(View):
             }
             db_user_collection.insert_one(record)
             
-            return JsonResponse({"message": "New record added"}) 
+            return JsonResponse({"message": "New record added"}, status=200) 
         except Exception as e:
             return JsonResponse({"error": f"Error occurred: {str(e)}"}, status=500)
 
@@ -99,11 +99,11 @@ class generateImage(View):
             if userid:
                 userdata = CHECKIFUSEREXISTS(userid)
                 if userdata and userdata.get('_id'):
-                    return JsonResponse({"message": "this is test generated image"})
+                    return JsonResponse({"message": "this is test generated image"}, status=200)
                 else:
-                    return JsonResponse({"message": "user error "})
+                    return JsonResponse({"message": "user error "}, status=300)
             else:
-                return JsonResponse({"message": "error : userid empty !!!"})
+                return JsonResponse({"message": "error : userid empty !!!"}, status=400)
         except Exception as e:
             return JsonResponse({"error": f"Error occurred: {str(e)}"}, status=500)
 
@@ -139,4 +139,4 @@ def CHECKIFUSEREXISTS(userid):
 
 ###########################################################################################################
 def test_endpoint(request):
-    return JsonResponse({'message': 'Django backend connected successfully!'})    
+    return JsonResponse({'message': 'Django backend connected successfully!'},status=200)    
