@@ -45,11 +45,12 @@ class AddUser(View):
     def post(self, request):
         try:
             data = json.loads(request.body)
+            print(data)
             firstname = data.get('firstname')
             lastname = data.get('lastname')
             emailid = data.get('emailid')
             password = data.get('password')
-
+            mobileno = data.get('mobileno')
             existing_user = db_user_collection.find_one({"emailid": emailid})
 
             if existing_user is not None:
@@ -59,15 +60,20 @@ class AddUser(View):
                 "firstname": firstname,
                 "lastname": lastname,
                 "emailid" : emailid,
+                "mobileno":mobileno,
                 "password" : password,
                 "sessions" : [],
                 "images" : []
             }
+            print(record)
             db_user_collection.insert_one(record)
-            
-            return JsonResponse({"message": "New record added"}, status=200) 
+            userdata = getUserDataForRegisteration(emailid)
+            userdata['_id'] = str(userdata['_id'])
+            return JsonResponse({"message": "success", "data": userdata}, status=200) 
         except Exception as e:
             return JsonResponse({"error": f"Error occurred: {str(e)}"}, status=500)
+
+#######################################################################################
 
 def get_data(request):
     try:
@@ -136,6 +142,11 @@ def CHECKIFUSEREXISTS(userid):
     userdata = db_user_collection.find_one({"_id": userid})
     return userdata
 
+#############################################
+
+def getUserDataForRegisteration(emailid):
+    userdata = db_user_collection.find_one({"emailid": emailid})
+    return userdata
 
 ###########################################################################################################
 def test_endpoint(request):
