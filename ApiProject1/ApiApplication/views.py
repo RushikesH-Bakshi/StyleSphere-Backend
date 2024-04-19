@@ -7,6 +7,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.hashers import check_password
 from datetime import datetime
+import requests
+import base64
+import io
+from PIL import Image
+from transformers import pipeline
 
 def index(request):
     return JsonResponse({"message": "App is running"}, status=200)  
@@ -105,7 +110,19 @@ class generateImage(View):
             if userid:
                 userdata = CHECKIFUSEREXISTS(userid)
                 if userdata and userdata.get('_id'):
-                    return JsonResponse({"message": "this is test generated image"}, status=200)
+                    model_api = "https://api-inference.huggingface.co/models/yuxue/sd-deepfashion-lora"
+                    headers = {"Authorization": "Bearer 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"}
+                    # response = requests.post(model_api, json=data)
+                    def query(payload):
+                        response = requests.post(model_api, headers=headers, json=payload)
+                        if response.status_code == 200:
+                            return response.content
+                    image_bytes = query({
+                        "inputs": "Frog with holding umbrella in his hands."
+                    })
+                if image_bytes:
+                    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+                    return JsonResponse({"image": image_base64,"message": ""}, status=200)
                 else:
                     return JsonResponse({"message": "user error "}, status=300)
             else:
