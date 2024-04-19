@@ -101,16 +101,30 @@ def get_data(request):
 # print("Converted Date and Time:", datetime_obj)
 ############################################################################################################
 
+image_captioner = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base", device='cpu')
+
+def image_to_base64_str(pil_image):
+    byte_arr = io.BytesIO()
+    pil_image.save(byte_arr, format='PNG')
+    byte_arr = byte_arr.getvalue()
+    return str(base64.b64encode(byte_arr).decode('utf-8'))
+
+
+def captioner(image,max_new_tokens,generate_kwargs):
+    # base64_image = image_to_base64_str(image)
+    result = image_captioner(image,max_new_tokens=max_new_tokens,generate_kwargs=generate_kwargs)
+    return result[0]['generated_text']
+
 @method_decorator(csrf_exempt, name='dispatch')
 class generateImage(View):
     def post(self, request):
         try:
             data = json.loads(request.body)
             userid = data.get('_id')
+            description=data.get('input')
             if userid:
                 userdata = CHECKIFUSEREXISTS(userid)
                 if userdata and userdata.get('_id'):
-                    print("Hi")
                     model_api = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5"
                     headers = {"Authorization": "Bearer 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"}
                     # response = requests.post(model_api, json=data)
@@ -119,11 +133,12 @@ class generateImage(View):
                         if response.status_code == 200:
                             return response.content
                     image_bytes = query({
-                        "inputs": "Frog with holding umbrella in his hands."
+                        "inputs": description
                     })
                     if image_bytes:
                         image_base64 = base64.b64encode(image_bytes).decode('utf-8')
-                        return JsonResponse({"image":image_base64,"message": "This is a generated image"}, status=200)
+                        caption=captioner(image_base64,max_new_tokens=200,generate_kwargs={"min_length":20})
+                        return JsonResponse({"image":image_base64,"message": caption}, status=200)
                     else:
                         return JsonResponse({"message": "user error "}, status=300)
             else:
