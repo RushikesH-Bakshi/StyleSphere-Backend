@@ -28,7 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['.vercel.app']
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000"
+    "*"
 ]
 # Application definition
 
