@@ -110,8 +110,9 @@ class generateImage(View):
             if userid:
                 userdata = CHECKIFUSEREXISTS(userid)
                 if userdata and userdata.get('_id'):
-                    model_api = "https://api-inference.huggingface.co/models/yuxue/sd-deepfashion-lora"
-                    headers = {"Authorization": "Bearer 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"}
+                    print("Hi")
+                    model_api = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5"
+                    headers = {"Authorization": "Bearer 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"}
                     # response = requests.post(model_api, json=data)
                     def query(payload):
                         response = requests.post(model_api, headers=headers, json=payload)
@@ -120,11 +121,11 @@ class generateImage(View):
                     image_bytes = query({
                         "inputs": "Frog with holding umbrella in his hands."
                     })
-                if image_bytes:
-                    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
-                    return JsonResponse({"image": image_base64,"message": ""}, status=200)
-                else:
-                    return JsonResponse({"message": "user error "}, status=300)
+                    if image_bytes:
+                        image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+                        return JsonResponse({"image":image_base64,"message": "This is a generated image"}, status=200)
+                    else:
+                        return JsonResponse({"message": "user error "}, status=300)
             else:
                 return JsonResponse({"message": "error : userid empty !!!"}, status=400)
         except Exception as e:

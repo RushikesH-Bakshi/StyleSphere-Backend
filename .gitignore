@@ -9,7 +9,7 @@ static/
 # Ignore the virtual environment directory
 venv/
 env/
-django_env/   
+/django_env
 
 # Ignore any local development settings
 *.env
